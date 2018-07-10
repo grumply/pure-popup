@@ -316,12 +316,6 @@ clientHeight =
 foreign import javascript unsafe "$r = $1.getBoundingClientRect()" bounding_client_rect_js :: Element -> IO JSV
 #endif
 
-
-
-#ifdef __GHCJS__
-foreign import javascript unsafe "$r = $1.getBoundingClientRect()" bounding_client_rect_js :: Element -> IO JSV
-#endif
-
 data BoundingRect = BR
     { brLeft :: Double
     , brTop :: Double
