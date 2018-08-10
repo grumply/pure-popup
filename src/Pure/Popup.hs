@@ -1,4 +1,4 @@
-{-# LANGUAGE ExistentialQuantification, PatternSynonyms, ViewPatterns, RecordWildCards, DuplicateRecordFields, CPP, MultiParamTypeClasses, TypeFamilies, DeriveGeneric, OverloadedStrings #-}
+{-# LANGUAGE ExistentialQuantification, PatternSynonyms, ViewPatterns, RecordWildCards, DuplicateRecordFields, CPP, MultiParamTypeClasses, TypeFamilies, DeriveGeneric, OverloadedStrings, FlexibleContexts #-}
 module Pure.Popup where
 
 import Pure hiding (Content,Content_,position)
