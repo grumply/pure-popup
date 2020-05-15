@@ -5,10 +5,8 @@ import Pure hiding (Content,Content_,position)
 
 import Pure.Data.Txt (isInfixOf)
 import Pure.Data.Cond
-import Pure.Data.CSS
 import Pure.Data.Prop
-import Pure.Data.Styles
-import Pure.Theme
+import Pure.Theme as CSS
 import Pure.Portal as Portal
 
 import Control.Arrow ((&&&))
@@ -45,7 +43,7 @@ data Popup = Popup_
     , themed :: SomePopupT
     } deriving (Generic)
 
-data SomePopupT = forall t. Themeable t => SomePopupT t
+data SomePopupT = forall t. Theme t => SomePopupT t
 
 instance Default SomePopupT where
     def = defaultPopupTheme
@@ -256,7 +254,7 @@ instance Pure Popup where
                                         & OnMount handlePortalMount
                                         & OnOpen handleOpen
                                         & OnUnmounted handlePortalUnmount
-                                        & PortalNode (\f -> as (f $ features & Theme t & Classes cs & Pure.Styles currentStyles & Lifecycle (HostRef handlePopupRef)) children)
+                                        & PortalNode (\f -> as (f $ features & CSS.themed t & Classes cs & Pure.Styles currentStyles & Lifecycle (HostRef handlePopupRef)) children)
                                         & Children [ trigger ]
                 }
 
@@ -561,8 +559,9 @@ instance Default PopupT where
             "-webkit-backface-visibility" =: b
             "backface-visibility" =: b
 
-instance Themeable PopupT where
-    theme c PopupT {..} = do
+instance Theme PopupT where
+    theme c = do
+        let PopupT {..} = def
         is c $ do
             -- base popup styles and spacing
             apply $ do
