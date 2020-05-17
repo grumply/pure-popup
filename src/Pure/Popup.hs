@@ -1,12 +1,11 @@
-{-# LANGUAGE ExistentialQuantification, PatternSynonyms, ViewPatterns, RecordWildCards, DuplicateRecordFields, CPP, MultiParamTypeClasses, TypeFamilies, DeriveGeneric, OverloadedStrings, FlexibleContexts #-}
+{-# LANGUAGE ExistentialQuantification, PatternSynonyms, ViewPatterns, RecordWildCards, DuplicateRecordFields, CPP, MultiParamTypeClasses, TypeFamilies, DeriveGeneric, OverloadedStrings, FlexibleContexts, PostfixOperators #-}
 module Pure.Popup where
 
-import Pure hiding (Content,Content_,position)
+import Pure hiding (Content,Content_,offset,not,(#))
 
 import Pure.Data.Txt (isInfixOf)
 import Pure.Data.Cond
 import Pure.Data.Prop
-import Pure.Theme as CSS
 import Pure.Portal as Portal
 
 import Control.Arrow ((&&&))
@@ -19,6 +18,8 @@ import Data.Maybe
 import GHC.Generics as G
 
 import Data.Function as Tools ((&))
+
+import Prelude hiding (rem,max,min)
 
 data Popup = Popup_
     { as :: Features -> [View] -> View
@@ -35,8 +36,8 @@ data Popup = Popup_
     , onMount :: IO ()
     , onOpen :: IO ()
     , onUnmount :: IO ()
-    , position :: Txt
-    , size :: Txt
+    , position_ :: Txt
+    , size_ :: Txt
     , triggerOn :: [Txt]
     , wide :: Maybe Txt
     , withPortal :: Portal.Portal -> Portal.Portal
@@ -51,7 +52,7 @@ instance Default SomePopupT where
 instance Default Popup where
     def = (G.to gdef)
         { as = \fs cs -> Div & Features fs & Children cs
-        , Pure.Popup.position = "top left"
+        , position_ = "top left"
         , triggerOn = [ "hover" ]
         , withPortal = id
         }
@@ -156,7 +157,7 @@ instance Pure Popup where
 
                             compute = computePopupStyle offset pbr cbr bs
 
-                            s = compute position
+                            s = compute position_
 
                             positions =
                                 [ "top left"
@@ -169,9 +170,9 @@ instance Pure Popup where
                                 , "left center"
                                 ]
 
-                            ps = (position,s) : fmap (id &&& compute) (filter (/= position) positions)
+                            ps = (position_,s) : fmap (id &&& compute) (filter (/= position_) positions)
 
-                            findValid [] = (position,s)
+                            findValid [] = (position_,s)
                             findValid ((p,c) : cs)
                                 | isStyleInViewport pbr bs c = (p,c)
                                 | otherwise                  = findValid cs
@@ -239,7 +240,7 @@ instance Pure Popup where
 
                                 cs =
                                     [ currentPosition
-                                    , size
+                                    , size_
                                     , maybe "" (<<>> "wide") wide
                                     , basic # "basic"
                                     , flowing # "flowing"
@@ -254,7 +255,7 @@ instance Pure Popup where
                                         & OnMount handlePortalMount
                                         & OnOpen handleOpen
                                         & OnUnmounted handlePortalUnmount
-                                        & PortalNode (\f -> as (f $ features & CSS.themed t & Classes cs & Pure.Styles currentStyles & Lifecycle (HostRef handlePopupRef)) children)
+                                        & PortalNode (\f -> as (f $ features & Pure.themed t & Classes cs & Pure.Styles currentStyles & Lifecycle (HostRef handlePopupRef)) children)
                                         & Children [ trigger ]
                 }
 
@@ -396,168 +397,173 @@ instance Default PopupT where
       where
         baseStyles = void $ do
             display =: none
-            "position" =: absolute
-            top =: pxs 0
-            right =: pxs 0
-            minWidth =: "-webkit-min-content"
-            minWidth =: "-moz-min-content"
-            minWidth =: "min-content"
-            zIndex =: "1900"
-            border =: pxs 1 <<>> solid <<>> "#D4D4D5"
-            lineHeight =: ems 1.4285
-            maxWidth =: pxs 250
-            background =: "#FFFFFF"
-            padding =: ems 0.833 <<>> ems 1
-            fontWeight =: normal
-            "font-style" =: normal
+            position =: absolute
+            top =: 0px
+            right =: 0px
+            min-width =: webkit-min-content
+            min-width =: moz-min-content
+            min-width =: min-content
+            z-index =: 1900
+            border =* [1px,solid,hex 0xD4D4D5]
+            line-height =: 1.4285em
+            max-width =: 250px
+            background =: hex 0xFFF
+            padding =* [0.833em,1em]
+            font-weight =: normal
+            font-style =: normal
             color =: rgba(0,0,0,0.87)
-            borderRadius =: rems 0.28571429
-            "-webkit-box-shadow" =: pxs 0 <<>> pxs 2 <<>> pxs 4 <<>> pxs 0 <<>> rgba(34,36,38,0.12) <&>> pxs 0 <<>> pxs 2 <<>> pxs 10 <<>> pxs 0 <<>> rgba(34,36,38,0.15)
-            "box-shadow" =: pxs 0 <<>> pxs 2 <<>> pxs 4 <<>> pxs 0 <<>> rgba(34,36,38,0.12) <&>> pxs 0 <<>> pxs 2 <<>> pxs 10 <<>> pxs 0 <<>> rgba(34,36,38,0.15)
+            border-radius =: rems 0.28571429
+            box-shadow =* [0px,2px, 4px,0px,rgba(34,36,38,0.12),","
+                          ,0px,2px,10px,0px,rgba(34,36,38,0.15)
+                          ]
         arrowStyles = void $ do
-            "position" =: absolute
+            position =: absolute
             content =: emptyQuotes
-            width =: ems 0.71428571
-            height =: ems 0.71428571
-            background =: "#FFFFFF"
-            "-webkit-transform" =: rotate(deg 45)
-            "transform" =: rotate(deg 45)
-            zIndex =: int 2
-            "-webkit-box-shadow" =: pxs 1 <<>> pxs 1 <<>> pxs 0 <<>> pxs 0 <<>> "#bababc"
-            "box-shadow" =: pxs 1 <<>> pxs 1 <<>> pxs 0 <<>> pxs 0 <<>> "#bababc"
+            width =: 0.71428571em
+            height =: 0.71428571em
+            background =: hex 0xFFF
+            transform =: rotate(45deg)
+            z-index =: 2
+            box-shadow =* [1px,1px,0px,0px,hex 0xbababc]
         spacing = void $ do
-            margin =: ems 0
+            margin =: 0
         topSpacing = void $ do
-            margin =: ems 0 <<>> ems 0 <<>> ems 0.71428571
-        topLeftSpacing = do
-            marginLeft =: ems 0
-            transOrig (left <<>> bottom)
-        topCenterSpacing = transOrig (center <<>> bottom)
-        topRightSpacing = do
-            marginRight =: ems 0
-            transOrig (right <<>> bottom)
-        leftCenterSpacing = do
-            margin =: ems 0 <<>> ems 0.71428571 <<>> ems 0 <<>> ems 0
-            transOrig (right <<>> per 50)
-        rightCenterSpacing = do
-            margin =: ems 0 <<>> ems 0 <<>> ems 0 <<>> ems 0.71428571
-            transOrig (right <<>> per 50)
+            margin =* [0em,0em,0em,0.71428571em]
+        topLeftSpacing = void $ do
+            margin-left =: 0
+            transform-origin =* [left,bottom]
+        topCenterSpacing = void $
+            transform-origin =* [center,bottom]
+        topRightSpacing = void $ do
+            margin-right =: 0
+            transform-origin =* [right,bottom]
+        leftCenterSpacing = void $ do
+            margin =* [0em,0.71428571em,0em,0em]
+            transform-origin =* [right,(50%)]
+        rightCenterSpacing = void $ do
+            margin =* [0em,0em,0em,0.71428571em]
+            transform-origin =* [right,(50%)]
         bottomSpacing = void $ do
-            margin =: ems 0.71428571 <<>> ems 0 <<>> ems 0
-        bottomLeftSpacing = do
-            marginLeft =: ems 0
-            transOrig (left <<>> top)
-        bottomCenterSpacing = transOrig (center <<>> top)
-        bottomRightSpacing = do
-            marginRight =: ems 0
-            transOrig (right <<>> top)
+            margin =* [0.71428571em,0em,0em]
+        bottomLeftSpacing = void $ do
+            margin-left =: 0em
+            transform-origin =* [left,top]
+        bottomCenterSpacing = void $
+            transform-origin =* [center,top]
+        bottomRightSpacing = void $ do
+            margin-right =: 0em
+            transform-origin =* [right,top]
         bottomCenterArrow = void $ do
-            marginLeft =: neg (ems 0.30714286)
-            top =: neg (ems 0.30714286)
-            left =: per 50
+            margin-left =: (-0.30714286)em
+            top =: (-0.30714286)em
+            left =: (50%)
             right =: auto
             bottom =: auto
-            boxShad (neg (pxs 1) <<>> neg (pxs 1) <<>> pxs 0 <<>> pxs 0 <<>> "#bababc")
+            box-shadow =* [(-1)px,(-1)px,0px,0px,hex 0xbababc]
         bottomLeftArrow = void $ do
-            top =: neg (ems 0.30714286)
-            left =: ems 1
+            top =: (-0.30714286)em
+            left =: 1em
             right =: auto
             bottom =: auto
-            marginLeft =: ems 0
-            boxShad (neg (pxs 1) <<>> neg (pxs 1) <<>> pxs 0 <<>> pxs 0 <<>> "#bababc")
+            margin-left =: 0em
+            box-shadow =* [(-1)px,(-1)px,0px,0px,hex 0xbababc]
         bottomRightArrow = void $ do
-            top =: neg (ems 0.30714286)
-            right =: ems 1
+            top =: (-0.30714286)em
+            right =: 1em
             bottom =: auto
             left =: auto
-            marginLeft =: ems 0
-            boxShad (neg (pxs 1) <<>> neg (pxs 1) <<>> pxs 0 <<>> pxs 0 <<>> "#bababc")
+            margin-left =: 0em
+            box-shadow =* [(-1)px,(-1)px,0px,0px,hex 0xbababc]
         topCenterArrow = void $ do
             top =: auto
             right =: auto
-            bottom =: neg (ems 0.30714286)
-            left =: per 50
-            marginLeft =: neg (ems 0.30714286)
+            bottom =: (-0.30714286)em
+            left =: (50%)
+            margin-left =: (-0.30714286)em
         topLeftArrow = void $ do
-            bottom =: neg (ems 0.30714286)
-            left =: ems 1
+            bottom =: (-0.30714286)em
+            left =: 1em
             top =: auto
             right =: auto
-            marginRight =: ems 0
+            margin-right =: 0em
         topRightArrow = void $ do
-            bottom =: neg (ems 0.30714286)
-            right =: ems 1
+            bottom =: (-0.30714286)em
+            right =: 1em
             top =: auto
             left =: auto
-            marginLeft =: ems 0
+            margin-left =: 0em
         leftCenterArrow = void $ do
-            top =: per 50
-            right =: neg (ems 0.30714286)
+            top =: (50%)
+            right =: (-0.30714286)em
             bottom =: auto
             left =: auto
-            marginTop =: neg (ems 0.30714286)
-            boxShad (pxs 1 <<>> neg (pxs 1) <<>> pxs 0 <<>> pxs 0 <<>> "#bababc")
+            margin-top =: (-0.30714286)em
+            box-shadow =* [1px,(-1)px,0px,0px,hex 0xbababc]
         rightCenterArrow = void $ do
-            top =: per 50
-            left =: neg (ems 0.30714286)
+            top =: (50%)
+            left =: (-0.30714286)em
             bottom =: auto
             right =: auto
-            marginTop =: neg (ems 0.30714286)
-            boxShad (neg (pxs 1) <<>> pxs 1 <<>> pxs 0 <<>> pxs 0 <<>> "#bababc") 
-        bottomArrowColor = void $ background =: "#FFFFFF"
-        sideCenterArrowColor = void $ background =: "#FFFFFF"
-        topArrowColor = void $ background =: "#FFFFFF"
-        invertedBottomArrowColor = void $ background =: "#1B1C1D"
-        invertedSideCenterArrowColor = void $ background =: "#1B1C1D"
-        invertedTopArrowColor = void $ background =: "#1B1C1D"
+            margin-top =: (-0.30714286)em
+            box-shadow =* [(-1)px,1px,0px,0px,hex 0xbababc]
+        bottomArrowColor = void $ 
+            background =: hex 0xFFF
+        sideCenterArrowColor = void $ 
+            background =: hex 0xFFF
+        topArrowColor = void $ 
+            background =: hex 0xFFF
+        invertedBottomArrowColor = void $ 
+            background =: hex 0x1B1C1D
+        invertedSideCenterArrowColor = void $ 
+            background =: hex 0x1B1C1D
+        invertedTopArrowColor = void $ 
+            background =: hex 0x1B1C1D
         loadingPopup = void $ do
             display =: block
             visibility =: hidden
-            zIndex =: neg one
-        animatingPopup = void $ display =: block
+            z-index =: (-1)
+        animatingPopup = void $ 
+            display =: block
         visiblePopup = void $ do
             display =: block
-            trans (translateZ(pxs 0))
-            backface hidden
-        basicPopup = void $ display =: none
-        widePopup = void $ maxWidth =: pxs 350
-        veryWidePopup = void $ maxWidth =: pxs 550
-        wideSmallScreenPopup = void $ maxWidth =: pxs 250
-        veryWideSmallScreenPopup = void $ maxWidth =: pxs 250
+            transform =: translateZ(0px)
+            webkit-backface-visibility =: hidden
+            backface-visibility =: hidden
+        basicPopup = void $ 
+            display =: none
+        widePopup = void $ 
+            max-width =: 350px
+        veryWidePopup = void $ 
+            max-width =: 550px
+        wideSmallScreenPopup = void $ 
+            max-width =: 250px
+        veryWideSmallScreenPopup = void $ 
+            max-width =: 250px
         fluidPopup = void $ do
-            width =: per 100
-            maxWidth =: none
+            width =: (100%)
+            max-width =: none
         invertedPopup = void $ do
-            background =: "#1B1C1D"
-            color =: "#FFFFFF"
+            background =: hex 0x1B1C1D
+            color =: hex 0xFFF
             border =: none
-            boxShad none
+            box-shadow =: none
         invertedArrow = void $ do
-            backgroundColor =: "#1B1C1D"
-            important $ boxShad none
-        flowingPopup = void $ maxWidth =: none
-        miniPopup = void $ fontSize =: rems 0.78571429
-        tinyPopup = void $ fontSize =: rems 0.85714286
-        smallPopup = void $ fontSize =: rems 0.92857143
-        regularPopup = void $ fontSize =: rems 1
-        largePopup = void $ fontSize =: rems 1.14285714
-        hugePopup = void $ fontSize =: rems 1.42857143
-
-        transOrig t = void $ do
-            "-webkit-transform-origin" =: t
-            "transform-origin" =: t
-
-        boxShad bs = void $ do
-            "-webkit-box-shadow" =: bs
-            "box-shadow" =: bs
-
-        trans t = void $ do
-            "-webkit-transform" =: t
-            "transform" =: t
-            
-        backface b = void $ do
-            "-webkit-backface-visibility" =: b
-            "backface-visibility" =: b
+            background-color =: hex 0x1B1C1D
+            important $ box-shadow =: none
+        flowingPopup = void $ 
+            max-width =: none
+        miniPopup = void $ 
+            font-size =: 0.78571429rem
+        tinyPopup = void $ 
+            font-size =: 0.85714286rem
+        smallPopup = void $ 
+            font-size =: 0.92857143rem
+        regularPopup = void $ 
+            font-size =: 1rem
+        largePopup = void $ 
+            font-size =: 1.14285714rem
+        hugePopup = void $ 
+            font-size =: 1.42857143rem
 
 instance Theme PopupT where
     theme c = do
@@ -570,29 +576,29 @@ instance Theme PopupT where
                 regularPopup
 
             -- base arrow styles
-            is ":before" $ apply arrowStyles
+            is before $ apply arrowStyles
 
             -- spacing
             is ".top" $ do
                 apply topSpacing
-                is ".inverted" . is ":before" .> invertedTopArrowColor
+                is ".inverted" . is before .> invertedTopArrowColor
                 is ".left" $ do
                     apply topLeftSpacing
-                    is ":before" .> topLeftArrow
+                    is before .> topLeftArrow
                 is ".center" $ do
                     apply topCenterSpacing
-                    is ":before" .> topCenterArrow
+                    is before .> topCenterArrow
                 is ".right" $ do 
                     apply topRightSpacing
-                    is ":before" .> topRightArrow
-                is ":before" .> topArrowColor
+                    is before .> topRightArrow
+                is before .> topArrowColor
 
             is ".left" $ do
                 is ".center" $ do
                     apply $ do
                         leftCenterSpacing
                         leftCenterArrow
-                    is ":before" $ do
+                    is before $ do
                         apply sideCenterArrowColor
                         is ".inverted" .> invertedSideCenterArrowColor
 
@@ -601,23 +607,23 @@ instance Theme PopupT where
                     apply $ do 
                         rightCenterSpacing
                         rightCenterArrow
-                    is ":before" $ do
+                    is before $ do
                         apply sideCenterArrowColor
                         is ".inverted" .> invertedSideCenterArrowColor
 
             is ".bottom" $ do
                 apply bottomSpacing
-                is ".inverted" . is ":before" .> invertedBottomArrowColor
+                is ".inverted" . is before .> invertedBottomArrowColor
                 is ".left" $ do
                     apply bottomLeftSpacing
-                    is ":before" .> bottomLeftArrow
+                    is before .> bottomLeftArrow
                 is ".center" $ do
                     apply bottomCenterSpacing
-                    is ":before" .> bottomCenterArrow
+                    is before .> bottomCenterArrow
                 is ".right" $ do
                     apply bottomRightSpacing
-                    is ":before" .> bottomRightArrow
-                is ":before" .> bottomArrowColor
+                    is before .> bottomRightArrow
+                is before .> bottomArrowColor
 
             is ".loading" .> loadingPopup
 
@@ -635,7 +641,7 @@ instance Theme PopupT where
 
             is ".inverted" $ do 
                 apply invertedPopup
-                is ":before" .> invertedArrow
+                is before .> invertedArrow
 
             is ".flowing" .> flowingPopup
 
@@ -778,13 +784,13 @@ instance HasProp OnUnmounted Popup where
 
 instance HasProp Position Popup where
     type Prop Position Popup = Txt
-    getProp _ = Pure.Popup.position
-    setProp _ pos p = p { Pure.Popup.position = pos }
+    getProp _ = position_
+    setProp _ pos p = p { position_ = pos }
 
 instance HasProp Size Popup where
     type Prop Size Popup = Txt
-    getProp _ = size
-    setProp _ sz p = p { size = sz }
+    getProp _ = size_
+    setProp _ sz p = p { size_ = sz }
 
 instance HasProp Trigger Popup where
     type Prop Trigger Popup = View
