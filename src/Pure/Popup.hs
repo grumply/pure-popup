@@ -9,6 +9,7 @@ import Data.Coerce
 import Data.Function ((&))
 
 -- TODO: calculate optimal positioning within onStatusDefault
+-- TODO: supply callback with both trigger host and tooltip host nodes
 
 data Status = Opened | Closed
   deriving (Eq,Ord,Show)
@@ -58,8 +59,8 @@ instance Pure Popup where
           { props = f
           }
 
-      upon (SetTooltipNode n) popup model = do
-        pure model { tooltip = n }
+      upon (SetNode n) popup model = do
+        pure model { ref = n }
 
       upon Toggle popup model
         | active model = do
@@ -81,14 +82,14 @@ instance Pure Popup where
           (popup:rest) -> 
             let 
               -- When active, the `props` function is applied to the tooltip
-              cs | active    = Portal (coerce body) popup <| props . WithHost (command . SetTooltipNode) $ getFeatures popup)
+              cs | active    = (Portal (coerce body) (SetFeatures (props . WithHost (command . SetNode) $ getFeatures popup) popup))
                              : rest
                  | otherwise = rest
               -- When inactive, the `props` function is applied to the trigger
               fs | active    = someThemed variant features
                  | otherwise = props (someThemed variant features)
             in 
-              as (WithHost (command . SetTriggerNode) fs) cs
+              as fs cs
           _ -> 
             as (someThemed variant features) children
 
