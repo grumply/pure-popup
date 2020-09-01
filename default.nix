@@ -1,4 +1,4 @@
-{ mkDerivation, base, pure, pure-cond, pure-prop, pure-styles, pure-txt, pure-theme, pure-portal, pure-css, stdenv
+{ mkDerivation, base, pure, pure-elm, pure-prop, stdenv
 }:
 mkDerivation {
   pname = "pure-popup";
@@ -7,7 +7,7 @@ mkDerivation {
   isLibrary = true;
   isExecutable = true;
   libraryHaskellDepends = [
-    base pure pure-cond pure-prop pure-styles pure-txt pure-theme pure-portal pure-css
+    base pure pure-elm pure-prop
   ];
   license = stdenv.lib.licenses.bsd3;
 }

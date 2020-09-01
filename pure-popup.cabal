@@ -17,14 +17,32 @@ library
   build-depends:
     base,
     pure,
-    pure-cond,
-    pure-css,
+    pure-elm,
     pure-prop,
-    pure-styles,
     pure-txt,
-    pure-theme,
-    pure-portal
+    pure-lifted
   exposed-modules: 
     Pure.Popup
+  default-extensions:
+    AllowAmbiguousTypes
+    BlockArguments
+    CPP
+    DataKinds
+    DeriveGeneric
+    DuplicateRecordFields
+    ExistentialQuantification
+    FlexibleContexts
+    LambdaCase
+    MultiParamTypeClasses
+    OverloadedStrings
+    PatternSynonyms
+    PolyKinds
+    PostfixOperators
+    RecordWildCards
+    ScopedTypeVariables
+    TemplateHaskell
+    TypeApplications
+    TypeFamilies
+    ViewPatterns
   hs-source-dirs:      src
   default-language:    Haskell2010
