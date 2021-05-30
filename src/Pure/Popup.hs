@@ -48,7 +48,7 @@ data Model = Model
 data Msg = Startup | Toggle | SetNode Node
 
 instance Pure Popup where
-  view = run (App [Startup] [] [] mdl upon render)
+  view = run (App [Startup] [] [] (pure mdl) upon render)
     where
       mdl = Model False (coerce nullJSV) id
 
