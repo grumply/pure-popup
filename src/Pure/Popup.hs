@@ -76,7 +76,8 @@ instance Pure Popup where
             { active = True
             , props  = f
             }
-
+            
+      render :: Elm Msg => Popup -> Model -> View
       render Popup_ {..} Model {..} =
         case children of
           (popup:rest) -> 
